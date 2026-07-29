@@ -90,7 +90,13 @@ app.post('/api/upload-file', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Yüklenecek bir dosya bulunamadı.' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const mime = req.file.mimetype || 'image/jpeg';
+    let fileUrl = `/uploads/${req.file.filename}`;
+    try {
+      const fileBuffer = fs.readFileSync(req.file.path);
+      fileUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+    } catch (e) {}
+
     const imageMeta: ProductImage = {
       id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       originalUrl: fileUrl,
@@ -212,16 +218,19 @@ app.post('/api/upload-url', async (req: Request, res: Response) => {
     const filename = `url_image_${uniqueSuffix}${ext}`;
     const filePath = path.join(UPLOADS_DIR, filename);
 
+    // Save local copy and construct Base64 Data URL so it is universally viewable across devices
     fs.writeFileSync(filePath, buffer);
 
-    const localUrl = `/uploads/${filename}`;
+    const mime = contentType || 'image/jpeg';
+    const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
+
     const imageMeta: ProductImage = {
       id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      originalUrl: localUrl,
-      optimizedUrl: localUrl,
-      thumbnailUrl: localUrl,
+      originalUrl: dataUrl,
+      optimizedUrl: dataUrl,
+      thumbnailUrl: dataUrl,
       fileName: filename,
-      fileType: contentType || 'image/jpeg',
+      fileType: mime,
       fileSize: buffer.length,
       width: 1000,
       height: 1000,

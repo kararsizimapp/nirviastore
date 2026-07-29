@@ -109,17 +109,26 @@ export class ApiClient {
 
   static async saveProduct(product: Product, userName?: string): Promise<Product> {
     try {
-      if (product.id && !product.id.startsWith('prd-new-')) {
-        return await this.request<Product>(`/api/products/${product.id}`, {
+      const existingProds = await this.getProducts();
+      const exists = existingProds.some(p => p.id === product.id);
+
+      let saved: Product;
+      if (exists && product.id) {
+        saved = await this.request<Product>(`/api/products/${product.id}`, {
           method: 'PUT',
           body: JSON.stringify(product)
         }, userName);
       } else {
-        return await this.request<Product>('/api/products', {
+        saved = await this.request<Product>('/api/products', {
           method: 'POST',
           body: JSON.stringify(product)
         }, userName);
       }
+
+      // Sync local cache
+      const updatedList = await this.getProducts();
+      localStorage.setItem('b2b_products_cache', JSON.stringify(updatedList));
+      return saved;
     } catch (e) {
       const prods = await this.getProducts();
       const index = prods.findIndex(p => p.id === product.id);

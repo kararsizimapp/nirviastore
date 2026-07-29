@@ -451,19 +451,19 @@
       "isCampaign": false,
       "isFeatured": false,
       "createdAt": "2026-07-29T09:44:59.525Z",
-      "updatedAt": "2026-07-29T09:59:55.525Z",
+      "updatedAt": "2026-07-29T11:06:56.329Z",
       "images": [
         {
-          "id": "img-1785322265503-10",
-          "originalUrl": "https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&auto=format&fit=crop&q=80",
-          "optimizedUrl": "https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&auto=format&fit=crop&q=80",
-          "thumbnailUrl": "https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&auto=format&fit=crop&q=80",
-          "fileName": "socks_10.jpg",
+          "id": "img-1785323195209-284",
+          "originalUrl": "https://pngup.com/u34F/magnific_use-the-uploaded-image-as_3G3I1p0REY.jpg",
+          "optimizedUrl": "https://pngup.com/u34F/magnific_use-the-uploaded-image-as_3G3I1p0REY.jpg",
+          "thumbnailUrl": "https://pngup.com/u34F/magnific_use-the-uploaded-image-as_3G3I1p0REY.jpg",
+          "fileName": "web_image.jpg",
           "fileType": "image/jpeg",
-          "fileSize": 300000,
-          "width": 1000,
-          "height": 1000,
-          "uploadDate": "2026-07-29T10:51:05.503Z",
+          "fileSize": 100000,
+          "width": 800,
+          "height": 800,
+          "uploadDate": "2026-07-29T11:06:35.209Z",
           "order": 1,
           "isMain": true
         }
@@ -490,19 +490,19 @@
       "isCampaign": false,
       "isFeatured": false,
       "createdAt": "2026-07-29T09:42:35.609Z",
-      "updatedAt": "2026-07-29T09:59:57.692Z",
+      "updatedAt": "2026-07-29T11:06:37.346Z",
       "images": [
         {
-          "id": "img-1785322265503-11",
-          "originalUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80",
-          "optimizedUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80",
-          "thumbnailUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80",
-          "fileName": "socks_11.jpg",
+          "id": "img-1785323174974-715",
+          "originalUrl": "https://pngup.com/CG1u/magnific_use-the-uploaded-image-as_jSjGpX0LD0.jpg",
+          "optimizedUrl": "https://pngup.com/CG1u/magnific_use-the-uploaded-image-as_jSjGpX0LD0.jpg",
+          "thumbnailUrl": "https://pngup.com/CG1u/magnific_use-the-uploaded-image-as_jSjGpX0LD0.jpg",
+          "fileName": "web_image.jpg",
           "fileType": "image/jpeg",
-          "fileSize": 300000,
-          "width": 1000,
-          "height": 1000,
-          "uploadDate": "2026-07-29T10:51:05.503Z",
+          "fileSize": 100000,
+          "width": 800,
+          "height": 800,
+          "uploadDate": "2026-07-29T11:06:14.974Z",
           "order": 1,
           "isMain": true
         }
@@ -727,6 +727,33 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log-1785323216329-322",
+      "timestamp": "2026-07-29T11:06:56.329Z",
+      "user": "Sistem Yöneticisi (Admin)",
+      "action": "Ürün Güncellendi",
+      "details": "Kısa Kadın Çorap (KIS-KAD-COR-855) ürünü güncellendi.",
+      "entityType": "product",
+      "entityId": "prd-new-1785318299525"
+    },
+    {
+      "id": "log-1785323197346-793",
+      "timestamp": "2026-07-29T11:06:37.346Z",
+      "user": "Sistem Yöneticisi (Admin)",
+      "action": "Ürün Güncellendi",
+      "details": "Kısa Kadın Çorap (KIS-KAD-COR-537) ürünü güncellendi.",
+      "entityType": "product",
+      "entityId": "prd-new-1785318155609"
+    },
+    {
+      "id": "log-1785322665065-557",
+      "timestamp": "2026-07-29T10:57:45.065Z",
+      "user": "Sistem Yöneticisi (Admin)",
+      "action": "Ürün Güncellendi",
+      "details": "Kısa Kadın Çorap (KIS-KAD-COR-537) ürünü güncellendi.",
+      "entityType": "product",
+      "entityId": "prd-new-1785318155609"
+    },
     {
       "id": "log-1785322352980-319",
       "timestamp": "2026-07-29T10:52:32.980Z",
