@@ -43,6 +43,12 @@ export const FALLBACK_BRANDS: string[] = [
   "Victoria Secret"
 ];
 
+const imgSocks1 = "https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&auto=format&fit=crop&q=80";
+const imgSocks2 = "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80";
+const imgSocks3 = "https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=800&auto=format&fit=crop&q=80";
+const imgSocks4 = "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=800&auto=format&fit=crop&q=80";
+const imgSocks5 = "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=800&auto=format&fit=crop&q=80";
+
 export const FALLBACK_PRODUCTS: Product[] = [
   {
     id: "prd-new-1785320359244",
@@ -69,10 +75,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785320406802-37",
-        originalUrl: "/uploads/url_image_1785320406801_284122.jpg",
-        optimizedUrl: "/uploads/url_image_1785320406801_284122.jpg",
-        thumbnailUrl: "/uploads/url_image_1785320406801_284122.jpg",
-        fileName: "url_image_1785320406801_284122.jpg",
+        originalUrl: imgSocks1,
+        optimizedUrl: imgSocks1,
+        thumbnailUrl: imgSocks1,
+        fileName: "calvin_klein_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 375530,
         width: 1000,
@@ -108,10 +114,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785319925629-139",
-        originalUrl: "/uploads/url_image_1785319925629_103240.jpg",
-        optimizedUrl: "/uploads/url_image_1785319925629_103240.jpg",
-        thumbnailUrl: "/uploads/url_image_1785319925629_103240.jpg",
-        fileName: "url_image_1785319925629_103240.jpg",
+        originalUrl: imgSocks2,
+        optimizedUrl: imgSocks2,
+        thumbnailUrl: imgSocks2,
+        fileName: "nike_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 329884,
         width: 1000,
@@ -147,10 +153,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785319739549-488",
-        originalUrl: "/uploads/url_image_1785319739548_331581.jpg",
-        optimizedUrl: "/uploads/url_image_1785319739548_331581.jpg",
-        thumbnailUrl: "/uploads/url_image_1785319739548_331581.jpg",
-        fileName: "url_image_1785319739548_331581.jpg",
+        originalUrl: imgSocks3,
+        optimizedUrl: imgSocks3,
+        thumbnailUrl: imgSocks3,
+        fileName: "lacoste_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 284886,
         width: 1000,
@@ -186,10 +192,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785319663231-626",
-        originalUrl: "/uploads/url_image_1785319663230_156262.jpg",
-        optimizedUrl: "/uploads/url_image_1785319663230_156262.jpg",
-        thumbnailUrl: "/uploads/url_image_1785319663230_156262.jpg",
-        fileName: "url_image_1785319663230_156262.jpg",
+        originalUrl: imgSocks4,
+        optimizedUrl: imgSocks4,
+        thumbnailUrl: imgSocks4,
+        fileName: "alo_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 277591,
         width: 1000,
@@ -225,10 +231,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785319558573-25",
-        originalUrl: "/uploads/url_image_1785319558573_607984.jpg",
-        optimizedUrl: "/uploads/url_image_1785319558573_607984.jpg",
-        thumbnailUrl: "/uploads/url_image_1785319558573_607984.jpg",
-        fileName: "url_image_1785319558573_607984.jpg",
+        originalUrl: imgSocks2,
+        optimizedUrl: imgSocks2,
+        thumbnailUrl: imgSocks2,
+        fileName: "nike_long_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 423472,
         width: 1000,
@@ -264,10 +270,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785319456549-313",
-        originalUrl: "/uploads/url_image_1785319456548_636981.jpg",
-        optimizedUrl: "/uploads/url_image_1785319456548_636981.jpg",
-        thumbnailUrl: "/uploads/url_image_1785319456548_636981.jpg",
-        fileName: "url_image_1785319456548_636981.jpg",
+        originalUrl: imgSocks5,
+        optimizedUrl: imgSocks5,
+        thumbnailUrl: imgSocks5,
+        fileName: "vs_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 288819,
         width: 1000,
@@ -303,10 +309,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318597864-458",
-        originalUrl: "/uploads/url_image_1785318597863_74135.jpg",
-        optimizedUrl: "/uploads/url_image_1785318597863_74135.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318597863_74135.jpg",
-        fileName: "url_image_1785318597863_74135.jpg",
+        originalUrl: imgSocks3,
+        optimizedUrl: imgSocks3,
+        thumbnailUrl: imgSocks3,
+        fileName: "lacoste_short_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 339225,
         width: 1000,
@@ -342,10 +348,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318568074-534",
-        originalUrl: "/uploads/url_image_1785318568074_920569.jpg",
-        optimizedUrl: "/uploads/url_image_1785318568074_920569.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318568074_920569.jpg",
-        fileName: "url_image_1785318568074_920569.jpg",
+        originalUrl: imgSocks4,
+        optimizedUrl: imgSocks4,
+        thumbnailUrl: imgSocks4,
+        fileName: "alo_short_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 287564,
         width: 1000,
@@ -381,10 +387,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318535341-46",
-        originalUrl: "/uploads/url_image_1785318535341_344027.jpg",
-        optimizedUrl: "/uploads/url_image_1785318535341_344027.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318535341_344027.jpg",
-        fileName: "url_image_1785318535341_344027.jpg",
+        originalUrl: imgSocks2,
+        optimizedUrl: imgSocks2,
+        thumbnailUrl: imgSocks2,
+        fileName: "nike_ankle_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 320678,
         width: 1000,
@@ -420,10 +426,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318494217-303",
-        originalUrl: "/uploads/url_image_1785318494216_975257.jpg",
-        optimizedUrl: "/uploads/url_image_1785318494216_975257.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318494216_975257.jpg",
-        fileName: "url_image_1785318494216_975257.jpg",
+        originalUrl: imgSocks5,
+        optimizedUrl: imgSocks5,
+        thumbnailUrl: imgSocks5,
+        fileName: "lv_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 345805,
         width: 1000,
@@ -459,10 +465,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318357590-321",
-        originalUrl: "/uploads/url_image_1785318357590_478190.jpg",
-        optimizedUrl: "/uploads/url_image_1785318357590_478190.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318357590_478190.jpg",
-        fileName: "url_image_1785318357590_478190.jpg",
+        originalUrl: imgSocks1,
+        optimizedUrl: imgSocks1,
+        thumbnailUrl: imgSocks1,
+        fileName: "tommy_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 288563,
         width: 1000,
@@ -498,10 +504,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318316131-995",
-        originalUrl: "/uploads/url_image_1785318316131_970695.jpg",
-        optimizedUrl: "/uploads/url_image_1785318316131_970695.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318316131_970695.jpg",
-        fileName: "url_image_1785318316131_970695.jpg",
+        originalUrl: imgSocks2,
+        optimizedUrl: imgSocks2,
+        thumbnailUrl: imgSocks2,
+        fileName: "adidas_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 384126,
         width: 1000,
@@ -537,10 +543,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     images: [
       {
         id: "img-1785318165371-705",
-        originalUrl: "/uploads/url_image_1785318165370_493817.jpg",
-        optimizedUrl: "/uploads/url_image_1785318165370_493817.jpg",
-        thumbnailUrl: "/uploads/url_image_1785318165370_493817.jpg",
-        fileName: "url_image_1785318165370_493817.jpg",
+        originalUrl: imgSocks1,
+        optimizedUrl: imgSocks1,
+        thumbnailUrl: imgSocks1,
+        fileName: "chanel_socks.jpg",
         fileType: "image/jpeg",
         fileSize: 384370,
         width: 1000,

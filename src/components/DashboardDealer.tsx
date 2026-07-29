@@ -257,8 +257,11 @@ export const DashboardDealer: React.FC<DashboardDealerProps> = ({
                       alt={product.name}
                       className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=80';
+                        const target = e.currentTarget;
+                        target.onerror = null;
+                        target.src = 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=400&auto=format&fit=crop&q=80';
                       }}
                     />
 

@@ -203,12 +203,14 @@ export class ApiClient {
   }
 
   static async uploadUrl(imageUrl: string): Promise<{ success: boolean; image: ProductImage }> {
+    const cleanUrl = fixImageUrl(imageUrl);
+    const filename = cleanUrl.split('/').pop()?.split('?')[0] || 'web_image.jpg';
     const imageMeta: ProductImage = {
       id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      originalUrl: imageUrl,
-      optimizedUrl: imageUrl,
-      thumbnailUrl: imageUrl,
-      fileName: 'web_image.jpg',
+      originalUrl: cleanUrl,
+      optimizedUrl: cleanUrl,
+      thumbnailUrl: cleanUrl,
+      fileName: filename.length < 30 ? filename : 'web_image.jpg',
       fileType: 'image/jpeg',
       fileSize: 100000,
       width: 800,
@@ -219,13 +221,18 @@ export class ApiClient {
     };
 
     try {
-      return await this.request<{ success: boolean; image: ProductImage }>('/api/upload-url', {
+      const serverRes = await this.request<{ success: boolean; image: ProductImage }>('/api/upload-url', {
         method: 'POST',
-        body: JSON.stringify({ imageUrl })
+        body: JSON.stringify({ imageUrl: cleanUrl })
       });
+      // If server returned a local /uploads/ URL, prefer clean direct URL on static / production deployments if needed
+      if (serverRes && serverRes.success && serverRes.image) {
+        return serverRes;
+      }
     } catch (e) {
-      return { success: true, image: imageMeta };
+      // Fallback directly to clean web URL
     }
+    return { success: true, image: imageMeta };
   }
 
   // Bulk Import / Export
@@ -401,14 +408,39 @@ export class ApiClient {
   }
 }
 
-// Fix Image URL Helper (Normalizes links, e.g. Imgur album links to direct image links)
+// Fix Image URL Helper (Normalizes links: Imgur, Hizliresim, Google Drive, Dropbox, Postimages, Unsplash, Data URLs, etc.)
 export function fixImageUrl(url?: string): string {
-  if (!url) return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=80';
+  if (!url) return 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&auto=format&fit=crop&q=80';
   const trimmed = url.trim();
+
+  // Data URLs or blob URLs
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+
+  // Handle Google Drive links
+  const driveMatch = trimmed.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/i);
+  if (driveMatch && driveMatch[1]) {
+    return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1000`;
+  }
+
+  // Handle Imgur links
   const imgurMatch = trimmed.match(/imgur\.com\/(?:a|gallery)?\/([a-zA-Z0-9]+)/i);
   if (imgurMatch && imgurMatch[1] && !trimmed.includes('i.imgur.com')) {
     return `https://i.imgur.com/${imgurMatch[1]}.jpg`;
   }
+
+  // Handle Hizliresim links
+  const hizliMatch = trimmed.match(/hizliresim\.com\/([a-zA-Z0-9]+)/i);
+  if (hizliMatch && hizliMatch[1] && !trimmed.includes('i.hizliresim.com')) {
+    return `https://i.hizliresim.com/${hizliMatch[1]}.jpg`;
+  }
+
+  // Handle Dropbox links
+  if (trimmed.includes('dropbox.com') && trimmed.includes('dl=0')) {
+    return trimmed.replace('dl=0', 'raw=1');
+  }
+
   return trimmed;
 }
 

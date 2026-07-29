@@ -58,8 +58,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 src={mainImgUrl}
                 alt={product.name}
                 className="w-full h-full object-contain object-center"
+                referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80';
+                  const target = e.currentTarget;
+                  target.onerror = null;
+                  target.src = 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=800&auto=format&fit=crop&q=80';
                 }}
               />
 
@@ -86,6 +89,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       src={fixImageUrl(img.thumbnailUrl || img.originalUrl)}
                       alt={img.fileName}
                       className="w-full h-full object-contain object-center"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.onerror = null;
+                        target.src = 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=400&auto=format&fit=crop&q=80';
+                      }}
                     />
                   </button>
                 ))}

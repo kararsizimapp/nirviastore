@@ -264,8 +264,11 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
                               alt={p.name}
                               className="w-full h-full object-contain object-center"
                               loading="lazy"
+                              referrerPolicy="no-referrer"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=80';
+                                const target = e.currentTarget;
+                                target.onerror = null;
+                                target.src = 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=400&auto=format&fit=crop&q=80';
                               }}
                             />
                           </div>
@@ -366,6 +369,12 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
                     alt={p.name}
                     className="w-full h-full object-contain object-center"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.onerror = null;
+                      target.src = 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=400&auto=format&fit=crop&q=80';
+                    }}
                   />
                   <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     p.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
