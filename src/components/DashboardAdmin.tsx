@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product, Dealer, PurchaseRecord, PaymentRecord } from '../types';
-import { formatTL, formatDate } from '../lib/api';
+import { formatTL, formatDate, fixImageUrl } from '../lib/api';
 import { 
   Users, Package, AlertTriangle, TrendingUp, DollarSign, 
-  Clock, ArrowUpRight, CheckCircle2, ShoppingBag, ShieldAlert, BarChart3, PieChart
+  Clock, ArrowUpRight, CheckCircle2, ShoppingBag, ShieldAlert, BarChart3, PieChart,
+  Search, SlidersHorizontal
 } from 'lucide-react';
 
 interface DashboardAdminProps {
@@ -21,11 +22,26 @@ export const DashboardAdmin: React.FC<DashboardAdminProps> = ({
   payments,
   onNavigate
 }) => {
+  // Critical Stock Widget State
+  const [criticalThreshold, setCriticalThreshold] = useState<number>(10);
+  const [criticalSearch, setCriticalSearch] = useState<string>('');
+
   // Metric Calculations
   const totalDealers = dealers.length;
   const totalProducts = products.length;
   const totalStock = products.reduce((acc, p) => acc + (p.stock || 0), 0);
-  const criticalStockCount = products.filter(p => p.stock < 10).length;
+
+  // Critical products list
+  const criticalProducts = products
+    .filter(p => (p.stock || 0) <= criticalThreshold)
+    .filter(p => {
+      if (!criticalSearch) return true;
+      const q = criticalSearch.toLowerCase();
+      return p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+    })
+    .sort((a, b) => (a.stock || 0) - (b.stock || 0));
+
+  const criticalStockCount = products.filter(p => (p.stock || 0) <= criticalThreshold).length;
 
   const totalReceivables = dealers.reduce((acc, d) => acc + (d.remainingBalance || 0), 0);
   const overdueDealersCount = dealers.filter(d => d.paymentStatus === 'overdue' || d.overdueBalance > 0).length;
@@ -113,7 +129,7 @@ export const DashboardAdmin: React.FC<DashboardAdminProps> = ({
         {/* Kritik Stok Uyarısı */}
         <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Kritik Stok (&lt;10)</span>
+            <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Kritik Stok (≤{criticalThreshold})</span>
             <div className="p-2 bg-amber-100 text-amber-700 rounded-lg">
               <AlertTriangle className="w-5 h-5" />
             </div>
@@ -274,6 +290,169 @@ export const DashboardAdmin: React.FC<DashboardAdminProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Kritik Stok Takip Widget'ı */}
+      <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+        {/* Widget Header */}
+        <div className="p-4 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border-b border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-amber-500 text-white rounded-lg shadow-sm">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900">Kritik Stok Seviyesindeki Ürünler</h3>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                  criticalProducts.length > 0 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  {criticalProducts.length} Ürün Listeleniyor
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Mevcut stok miktarı belirlenen kritik eşiğin altında kalan veya tükenen ürünler
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search filter inside widget */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Listede ara..."
+                value={criticalSearch}
+                onChange={(e) => setCriticalSearch(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 w-36 sm:w-44"
+              />
+            </div>
+
+            {/* Threshold Selector */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-500 font-medium whitespace-nowrap">Kritik Eşik:</span>
+              <select
+                value={criticalThreshold}
+                onChange={(e) => setCriticalThreshold(Number(e.target.value))}
+                className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer"
+              >
+                <option value={5}>≤ 5 Adet</option>
+                <option value={10}>≤ 10 Adet</option>
+                <option value={15}>≤ 15 Adet</option>
+                <option value={20}>≤ 20 Adet</option>
+                <option value={50}>≤ 50 Adet</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Widget Content */}
+        <div className="p-4">
+          {criticalProducts.length === 0 ? (
+            <div className="py-8 text-center space-y-2">
+              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-bold text-slate-800">Tüm Ürünlerin Stok Seviyesi Yeterli</p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Stok miktarı {criticalThreshold} adedin altında olan hiçbir ürün bulunmuyor. Katalogunuzdaki ürün stokları güvenli seviyededir.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {criticalProducts.map((p) => {
+                const imgUrl = fixImageUrl(p.images?.[0]?.thumbnailUrl || p.images?.[0]?.originalUrl);
+                const stockRatio = Math.min(100, Math.max(8, ((p.stock || 0) / criticalThreshold) * 100));
+
+                return (
+                  <div 
+                    key={p.id}
+                    className="p-3 bg-slate-50/80 hover:bg-amber-50/50 rounded-xl border border-slate-200/80 hover:border-amber-300 transition-all flex gap-3 relative group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="w-16 h-16 bg-white rounded-lg border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center p-1">
+                      <img 
+                        src={imgUrl} 
+                        alt={p.name}
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.onerror = null;
+                          target.src = 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=400&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-start justify-between gap-1">
+                          <h4 className="text-xs font-bold text-slate-900 truncate" title={p.name}>
+                            {p.name}
+                          </h4>
+                          {/* Stock status badge */}
+                          {p.stock === 0 ? (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 animate-pulse">
+                              Stok Tükendi
+                            </span>
+                          ) : p.stock <= 3 ? (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              Çok Kritik
+                            </span>
+                          ) : (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-100 text-orange-800">
+                              Kritik
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                          SKU: <span className="font-mono font-medium text-slate-700">{p.code}</span> • <span className="font-medium text-slate-700">{p.brand}</span>
+                        </p>
+                      </div>
+
+                      {/* Stock Bar & Info */}
+                      <div className="mt-2 space-y-1">
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-slate-500 font-medium">Mevcut Stok:</span>
+                          <span className={`font-mono font-bold ${p.stock === 0 ? 'text-red-600' : 'text-amber-700'}`}>
+                            {p.stock} Adet
+                          </span>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              p.stock === 0 ? 'bg-red-600' : p.stock <= 3 ? 'bg-amber-500' : 'bg-orange-400'
+                            }`}
+                            style={{ width: `${stockRatio}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Link */}
+        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <span className="text-slate-500">
+            * Stok seviyelerini güncellemek veya sipariş/stok girişi yapmak için Ürün Yönetimi modülüne geçebilirsiniz.
+          </span>
+          <button
+            onClick={() => onNavigate('products')}
+            className="text-blue-600 font-bold hover:text-blue-700 flex items-center gap-1 hover:underline shrink-0"
+          >
+            <span>Tüm Ürün Yönetimine Git</span>
+            <ArrowUpRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
