@@ -1,0 +1,6 @@
+{
+  "name": "Bayi Ürün ve Cari Takip Yönetim Paneli",
+  "description": "Modern, hızlı, mobil uyumlu bayi ve cari hesap takip yönetim paneli.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
