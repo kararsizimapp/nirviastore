@@ -166,37 +166,13 @@ export class ApiClient {
           isMain: true
         };
 
-        // Try server first
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/upload-file');
-
-        if (onProgress) {
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              onProgress(Math.round((e.loaded / e.total) * 100));
-            }
-          };
-        }
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              resolve(JSON.parse(xhr.responseText));
-            } catch (err) {
-              resolve({ success: true, image: imageMeta });
-            }
-          } else {
-            // Fallback to dataUrl on server error / 404
-            resolve({ success: true, image: imageMeta });
-          }
-        };
-
-        xhr.onerror = () => resolve({ success: true, image: imageMeta });
-        xhr.ontimeout = () => resolve({ success: true, image: imageMeta });
-
+        // Send file asynchronously to backend if available, but resolve with Data URL imageMeta so it works on static deployments
         const formData = new FormData();
         formData.append('image', file);
-        xhr.send(formData);
+        fetch('/api/upload-file', { method: 'POST', body: formData }).catch(() => {});
+
+        if (onProgress) onProgress(100);
+        resolve({ success: true, image: imageMeta });
       };
       reader.readAsDataURL(file);
     });
@@ -220,18 +196,7 @@ export class ApiClient {
       isMain: true
     };
 
-    try {
-      const serverRes = await this.request<{ success: boolean; image: ProductImage }>('/api/upload-url', {
-        method: 'POST',
-        body: JSON.stringify({ imageUrl: cleanUrl })
-      });
-      // If server returned a local /uploads/ URL, prefer clean direct URL on static / production deployments if needed
-      if (serverRes && serverRes.success && serverRes.image) {
-        return serverRes;
-      }
-    } catch (e) {
-      // Fallback directly to clean web URL
-    }
+    // Keep direct web URL so it works seamlessly on live site, static exports, Vercel & dev server
     return { success: true, image: imageMeta };
   }
 
@@ -434,6 +399,18 @@ export function fixImageUrl(url?: string): string {
   const hizliMatch = trimmed.match(/hizliresim\.com\/([a-zA-Z0-9]+)/i);
   if (hizliMatch && hizliMatch[1] && !trimmed.includes('i.hizliresim.com')) {
     return `https://i.hizliresim.com/${hizliMatch[1]}.jpg`;
+  }
+
+  // Handle ImgBB links (ibb.co/xyz)
+  const ibbMatch = trimmed.match(/ibb\.co\/([a-zA-Z0-9]+)/i);
+  if (ibbMatch && ibbMatch[1] && !trimmed.includes('i.ibb.co')) {
+    return `https://i.ibb.co/${ibbMatch[1]}/image.jpg`;
+  }
+
+  // Handle Postimages links (postimg.cc/xyz or postimages.org)
+  const postimgMatch = trimmed.match(/postimg\.cc\/([a-zA-Z0-9]+)/i);
+  if (postimgMatch && postimgMatch[1] && !trimmed.includes('i.postimg.cc')) {
+    return `https://i.postimg.cc/${postimgMatch[1]}/image.jpg`;
   }
 
   // Handle Dropbox links
