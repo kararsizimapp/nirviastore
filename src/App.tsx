@@ -26,13 +26,7 @@ export default function App() {
       const saved = localStorage.getItem('b2b_session_user');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    return {
-      id: 'usr-admin-1',
-      username: 'admin',
-      name: 'Sistem Yöneticisi',
-      email: 'admin@bayisistemi.com',
-      role: 'admin'
-    };
+    return null;
   });
 
   const handleLogin = (user: User) => {
