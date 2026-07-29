@@ -1,0 +1,33 @@
+{
+  "entities": {
+    "products": {
+      "title": "Product",
+      "description": "Products with Firebase Cloud Storage image metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "category": { "type": "string" },
+        "code": { "type": "string" },
+        "barcode": { "type": "string" },
+        "price": { "type": "number" },
+        "dealerPrice": { "type": "number" },
+        "vatRate": { "type": "number" },
+        "stock": { "type": "number" },
+        "minOrderQuantity": { "type": "number" },
+        "packageQuantity": { "type": "number" },
+        "status": { "type": "string" },
+        "badge": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "imagePath": { "type": "string" },
+        "imageName": { "type": "string" },
+        "imageContentType": { "type": "string" },
+        "imageSize": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price"]
+    }
+  }
+}

@@ -41,14 +41,14 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10 MB Limit
+    fileSize: 25 * 1024 * 1024 // 25 MB Limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype.toLowerCase())) {
+    const isImg = file.mimetype.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|heic|avif)$/i.test(file.originalname);
+    if (isImg) {
       cb(null, true);
     } else {
-      cb(new Error('Desteklenmeyen dosya formatı. Lütfen JPG, PNG veya WEBP yükleyin.'));
+      cb(new Error('Desteklenmeyen dosya formatı. Lütfen görsel dosyası yükleyin.'));
     }
   }
 });
@@ -75,44 +75,10 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
 });
 
 // 2. File Upload via Multipart
+// Deprecated legacy file upload (Now using client-side Firebase Cloud Storage)
 app.post('/api/upload-file', (req: Request, res: Response) => {
-  const uploadSingle = upload.single('image');
-
-  uploadSingle(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'Dosya çok büyük. Maksimum 10 MB yükleyebilirsiniz.' });
-      }
-      return res.status(400).json({ error: err.message || 'Görsel yüklenirken bir hata oluştu.' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'Yüklenecek bir dosya bulunamadı.' });
-    }
-
-    const mime = req.file.mimetype || 'image/jpeg';
-    let fileUrl = `/uploads/${req.file.filename}`;
-    try {
-      const fileBuffer = fs.readFileSync(req.file.path);
-      fileUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
-    } catch (e) {}
-
-    const imageMeta: ProductImage = {
-      id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      originalUrl: fileUrl,
-      optimizedUrl: fileUrl,
-      thumbnailUrl: fileUrl,
-      fileName: req.file.originalname,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
-      width: 1000,
-      height: 1000,
-      uploadDate: new Date().toISOString(),
-      order: 1,
-      isMain: false
-    };
-
-    return res.json({ success: true, image: imageMeta });
+  return res.status(400).json({ 
+    error: 'Görsel yüklemeleri Firebase Cloud Storage üzerinden istemci tarafında yapılmaktadır.' 
   });
 });
 

@@ -58,6 +58,11 @@ export interface Product {
   isFeatured?: boolean;
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string;
+  imagePath?: string;
+  imageName?: string;
+  imageContentType?: string;
+  imageSize?: number;
   images: ProductImage[];
 }
 

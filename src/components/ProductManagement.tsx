@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { formatTL, fixImageUrl } from '../lib/api';
+import { InvalidImageWarningBanner } from './InvalidImageWarningBanner';
 import { 
   Package, Plus, Search, Filter, Download, Upload, 
   Edit3, Trash2, Eye, LayoutGrid, List, Sparkles, CheckCircle2, AlertTriangle, FileSpreadsheet, X, Tag, Bookmark
@@ -145,6 +146,9 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
         </div>
       </div>
 
+      {/* Migration / Invalid Image Detection Banner */}
+      <InvalidImageWarningBanner products={products} onEditProduct={onEditProduct} />
+
       {/* Filter and View Toggle Toolbar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
@@ -248,7 +252,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
                 ) : (
                   filteredProducts.map(p => {
                     const mainImg = p.images?.find(i => i.isMain) || p.images?.[0];
-                    const rawUrl = mainImg?.optimizedUrl || mainImg?.originalUrl;
+                    const rawUrl = p.imageUrl || mainImg?.optimizedUrl || mainImg?.originalUrl;
                     const imgUrl = fixImageUrl(rawUrl);
 
                     return (
@@ -355,7 +359,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredProducts.map(p => {
             const mainImg = p.images?.find(i => i.isMain) || p.images?.[0];
-            const rawUrl = mainImg?.optimizedUrl || mainImg?.originalUrl;
+            const rawUrl = p.imageUrl || mainImg?.optimizedUrl || mainImg?.originalUrl;
             const imgUrl = fixImageUrl(rawUrl);
 
             return (

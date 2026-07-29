@@ -9,6 +9,74 @@ import {
   FALLBACK_TRANSACTIONS,
   FALLBACK_AUDITLOGS
 } from './fallbackData';
+import {
+  fetchProductsFromFirestore,
+  saveProductToFirestore,
+  deleteProductFromFirestore,
+  deleteStorageImage,
+  isInvalidImageUrl
+} from './firebaseService';
+
+export async function compressImageFile(file: File, maxWidth = 1200, quality = 0.82): Promise<{ dataUrl: string; file: File }> {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/') && !/\.(jpe?g|png|webp|gif|bmp|heic|avif)$/i.test(file.name)) {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ dataUrl: reader.result as string, file });
+      reader.onerror = () => resolve({ dataUrl: '', file });
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let width = img.width || 800;
+      let height = img.height || 800;
+
+      if (width > maxWidth || height > maxWidth) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxWidth) / height);
+          height = maxWidth;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+      }
+
+      const mimeType = 'image/jpeg';
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+
+      canvas.toBlob((blob) => {
+        const compressedFile = blob
+          ? new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: mimeType })
+          : file;
+        resolve({ dataUrl, file: compressedFile });
+      }, mimeType, quality);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      const reader = new FileReader();
+      reader.onload = () => resolve({ dataUrl: reader.result as string, file });
+      reader.onerror = () => resolve({ dataUrl: '', file });
+      reader.readAsDataURL(file);
+    };
+
+    img.src = objectUrl;
+  });
+}
 
 export class ApiClient {
   private static async request<T>(url: string, options: RequestInit = {}, userHeader?: string): Promise<T> {
@@ -81,110 +149,154 @@ export class ApiClient {
     }
   }
 
-  // Products
+  // Products via Firestore with local fallback
   static async getProducts(): Promise<Product[]> {
     try {
-      const data = await this.request<Product[]>('/api/products');
-      if (Array.isArray(data) && data.length > 0) {
-        localStorage.setItem('b2b_products_cache', JSON.stringify(data));
-        return data;
+      const products = await fetchProductsFromFirestore();
+      if (products && products.length > 0) {
+        try {
+          localStorage.setItem('b2b_products_cache', JSON.stringify(products));
+        } catch (e) {}
+        return products;
       }
-    } catch (e) {
-      // Static mode or API error
-    }
 
-    const cached = localStorage.getItem('b2b_products_cache');
-    if (cached) {
+      // Seed initial sample products to Firestore if empty
+      for (const p of FALLBACK_PRODUCTS) {
+        await saveProductToFirestore(p).catch(() => {});
+      }
+      const seeded = await fetchProductsFromFirestore().catch(() => null);
+      if (seeded && seeded.length > 0) {
+        try {
+          localStorage.setItem('b2b_products_cache', JSON.stringify(seeded));
+        } catch (e) {}
+        return seeded;
+      }
+      return FALLBACK_PRODUCTS;
+    } catch (e: any) {
+      console.warn('Firestore getProducts hatası/uyarısı, yerel önbellek kullanılıyor:', e);
       try {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+        const cached = localStorage.getItem('b2b_products_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
         }
-      } catch (err) {}
+      } catch (parseErr) {}
+      return FALLBACK_PRODUCTS;
     }
-
-    localStorage.setItem('b2b_products_cache', JSON.stringify(FALLBACK_PRODUCTS));
-    return FALLBACK_PRODUCTS;
   }
 
   static async saveProduct(product: Product, userName?: string): Promise<Product> {
     try {
-      const existingProds = await this.getProducts();
-      const exists = existingProds.some(p => p.id === product.id);
+      // Check if product updated and new image replaced old imagePath
+      const existingProds = await fetchProductsFromFirestore().catch(() => []);
+      const existing = existingProds.find(p => p.id === product.id);
 
-      let saved: Product;
-      if (exists && product.id) {
-        saved = await this.request<Product>(`/api/products/${product.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(product)
-        }, userName);
-      } else {
-        saved = await this.request<Product>('/api/products', {
-          method: 'POST',
-          body: JSON.stringify(product)
-        }, userName);
+      if (existing && existing.imagePath && product.imagePath && existing.imagePath !== product.imagePath) {
+        // Delete old image from Storage
+        await deleteStorageImage(existing.imagePath).catch(() => {});
       }
 
-      // Sync local cache
-      const updatedList = await this.getProducts();
-      localStorage.setItem('b2b_products_cache', JSON.stringify(updatedList));
+      const saved = await saveProductToFirestore(product);
+      try {
+        const cached = localStorage.getItem('b2b_products_cache');
+        let productsList: Product[] = cached ? JSON.parse(cached) : [];
+        const idx = productsList.findIndex(p => p.id === saved.id);
+        if (idx >= 0) productsList[idx] = saved;
+        else productsList.push(saved);
+        localStorage.setItem('b2b_products_cache', JSON.stringify(productsList));
+      } catch (e) {}
+
+      // Best-effort notify backend API for audit log
+      this.request<Product>(`/api/products/${product.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(saved)
+      }, userName).catch(() => {});
+
       return saved;
-    } catch (e) {
-      const prods = await this.getProducts();
-      const index = prods.findIndex(p => p.id === product.id);
-      if (index >= 0) {
-        prods[index] = product;
-      } else {
-        prods.unshift(product);
-      }
-      localStorage.setItem('b2b_products_cache', JSON.stringify(prods));
+    } catch (e: any) {
+      console.warn('Firestore saveProduct uyarısı, yerel veriye yazılıyor:', e);
+      try {
+        const cached = localStorage.getItem('b2b_products_cache');
+        let productsList: Product[] = cached ? JSON.parse(cached) : [...FALLBACK_PRODUCTS];
+        const idx = productsList.findIndex(p => p.id === product.id);
+        if (idx >= 0) productsList[idx] = product;
+        else productsList.push(product);
+        localStorage.setItem('b2b_products_cache', JSON.stringify(productsList));
+      } catch (err) {}
       return product;
     }
   }
 
   static async deleteProduct(id: string, userName?: string): Promise<void> {
     try {
-      await this.request<{ success: boolean }>(`/api/products/${id}`, {
+      const existingProds = await fetchProductsFromFirestore().catch(() => []);
+      const existing = existingProds.find(p => p.id === id);
+
+      await deleteProductFromFirestore(id, existing?.imagePath);
+
+      // Best-effort notify backend API for audit log
+      this.request<{ success: boolean }>(`/api/products/${id}`, {
         method: 'DELETE'
-      }, userName);
-    } catch (e) {
-      const prods = await this.getProducts();
-      const updated = prods.filter(p => p.id !== id);
-      localStorage.setItem('b2b_products_cache', JSON.stringify(updated));
+      }, userName).catch(() => {});
+    } catch (e: any) {
+      console.warn('Firestore deleteProduct uyarısı:', e);
+    } finally {
+      try {
+        const cached = localStorage.getItem('b2b_products_cache');
+        if (cached) {
+          const productsList: Product[] = JSON.parse(cached);
+          const filtered = productsList.filter(p => p.id !== id);
+          localStorage.setItem('b2b_products_cache', JSON.stringify(filtered));
+        }
+      } catch (err) {}
     }
   }
 
   // Image Upload Methods
   static async uploadFile(file: File, onProgress?: (pct: number) => void): Promise<{ success: boolean; image: ProductImage }> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        const imageMeta: ProductImage = {
-          id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          originalUrl: dataUrl,
-          optimizedUrl: dataUrl,
-          thumbnailUrl: dataUrl,
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          width: 800,
-          height: 800,
-          uploadDate: new Date().toISOString(),
-          order: 1,
-          isMain: true
-        };
+    if (onProgress) onProgress(20);
 
-        // Send file asynchronously to backend if available, but resolve with Data URL imageMeta so it works on static deployments
-        const formData = new FormData();
-        formData.append('image', file);
-        fetch('/api/upload-file', { method: 'POST', body: formData }).catch(() => {});
+    const { dataUrl, file: compressedFile } = await compressImageFile(file);
+    if (onProgress) onProgress(60);
 
-        if (onProgress) onProgress(100);
-        resolve({ success: true, image: imageMeta });
-      };
-      reader.readAsDataURL(file);
-    });
+    let serverImage: ProductImage | null = null;
+    try {
+      const formData = new FormData();
+      formData.append('image', compressedFile);
+      const res = await fetch('/api/upload-file', { method: 'POST', body: formData });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.image) {
+          serverImage = json.image;
+        }
+      }
+    } catch (e) {
+      // Backend request error
+    }
+
+    if (onProgress) onProgress(100);
+
+    const fallbackImage: ProductImage = {
+      id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      originalUrl: dataUrl,
+      optimizedUrl: dataUrl,
+      thumbnailUrl: dataUrl,
+      fileName: file.name,
+      fileType: 'image/jpeg',
+      fileSize: compressedFile.size || file.size,
+      width: 1000,
+      height: 1000,
+      uploadDate: new Date().toISOString(),
+      order: 1,
+      isMain: true
+    };
+
+    return {
+      success: true,
+      image: serverImage || fallbackImage
+    };
   }
 
   static async uploadUrl(imageUrl: string): Promise<{ success: boolean; image: ProductImage }> {

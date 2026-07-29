@@ -23,7 +23,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const effectivePrice = customPrice !== undefined ? customPrice : product.dealerPrice;
 
   const currentImage = product.images?.[selectedImageIndex] || product.images?.[0];
-  const mainImgUrl = fixImageUrl(currentImage?.optimizedUrl || currentImage?.originalUrl);
+  const mainImgUrl = fixImageUrl(product.imageUrl || currentImage?.optimizedUrl || currentImage?.originalUrl);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">

@@ -89,6 +89,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [colorInput, setColorInput] = useState('');
   const [sizeInput, setSizeInput] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Variant addition
   const handleAddVariant = () => {
@@ -147,8 +148,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     setFormData({ ...formData, sizes: formData.sizes.filter(s => s !== size) });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg(null);
 
     if (!formData.name.trim()) {
@@ -168,7 +170,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       return;
     }
 
-    onSave(formData);
+    setIsSubmitting(true);
+    try {
+      await onSave(formData);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Ürün kaydedilirken bir hata oluştu.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -639,9 +647,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: Görseller (Integrated ImageUploader) */}
+          {/* TAB 4: Görseller (Integrated ImageUploader with Firebase Storage) */}
           {activeTab === 'images' && (
             <ImageUploader
+              productId={formData.id}
               images={formData.images}
               onChange={(newImages) => setFormData({ ...formData, images: newImages })}
             />
@@ -658,10 +667,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
+              disabled={isSubmitting}
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
             >
               <Save className="w-4 h-4" />
-              Ürünü Kaydet
+              {isSubmitting ? 'Kaydediliyor...' : 'Ürünü Kaydet'}
             </button>
           </div>
         </form>

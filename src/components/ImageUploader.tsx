@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { ProductImage } from '../types';
-import { ApiClient, fixImageUrl } from '../lib/api';
+import { uploadImageToFirebaseStorage } from '../lib/firebaseService';
+import { fixImageUrl } from '../lib/api';
 import { 
   Upload, Link as LinkIcon, Image as ImageIcon, Trash2, 
-  CheckCircle2, AlertCircle, RefreshCw, Star, ArrowUp, ArrowDown, FileCode
+  CheckCircle2, AlertCircle, RefreshCw, Star, ArrowUp, ArrowDown, ShieldCheck
 } from 'lucide-react';
 
 interface ImageUploaderProps {
+  productId?: string;
   images: ProductImage[];
   onChange: (images: ProductImage[]) => void;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onChange }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ productId, images, onChange }) => {
   const [activeTab, setActiveTab] = useState<'file' | 'url'>('file');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -19,7 +21,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onChange }
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // File Upload Handler
+  // File Upload Handler via Firebase Cloud Storage
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -27,37 +29,42 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onChange }
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // Frontend Validations
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type.toLowerCase())) {
-      setErrorMessage('Desteklenmeyen dosya biçimi! Lütfen JPG, PNG veya WEBP yükleyin.');
+    // Validation
+    const isImage = (file.type && file.type.startsWith('image/')) || 
+                    /\.(jpe?g|png|webp)$/i.test(file.name);
+    if (!isImage) {
+      setErrorMessage('Desteklenmeyen dosya biçimi! Lütfen JPG, JPEG, PNG veya WEBP formatında bir görsel yükleyin.');
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setErrorMessage('Dosya boyutu çok büyük! Maksimum dosya boyutu 10 MB olmalıdır.');
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMessage('Dosya boyutu çok büyük! Yüklemeden önceki maksimum dosya boyutu 25 MB olabilir.');
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(10);
 
+    const targetProductId = productId || `prd-${Date.now()}`;
+
     try {
-      const result = await ApiClient.uploadFile(file, (pct) => setUploadProgress(pct));
-      if (result.success && result.image) {
-        const newImg = result.image;
-        newImg.isMain = images.length === 0; // First image becomes main
-        newImg.order = images.length + 1;
-        
-        onChange([...images, newImg]);
-        setSuccessMessage('Görsel başarıyla yüklendi ve optimize edildi!');
-        setUploadProgress(100);
-      }
+      const result = await uploadImageToFirebaseStorage(
+        targetProductId,
+        file,
+        (pct) => setUploadProgress(pct)
+      );
+
+      const newImg = result.productImage;
+      newImg.isMain = images.length === 0;
+      newImg.order = images.length + 1;
+
+      onChange([...images, newImg]);
+      setSuccessMessage('Görsel başarıyla WEBP formatına dönüştürüldü (1600x1600) ve Firebase Cloud Storage\'a yüklendi!');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Yükleme sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      console.error('Firebase Storage Yükleme Hatası:', err);
+      setErrorMessage(err.message || 'Firebase Cloud Storage yüklemesi başarısız oldu.');
     } finally {
       setIsUploading(false);
-      // Reset input value
       e.target.value = '';
     }
   };
@@ -70,47 +77,44 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onChange }
 
     setErrorMessage(null);
     setSuccessMessage(null);
+
+    if (targetUrl.startsWith('blob:') || targetUrl.startsWith('data:') || targetUrl.startsWith('file:') || targetUrl.includes('localhost')) {
+      setErrorMessage('Geçersiz görsel adresi! Lütfen geçerli bir internet adresi (HTTP/HTTPS) kullanın.');
+      return;
+    }
+
     setIsUploading(true);
 
     try {
-      const result = await ApiClient.uploadUrl(targetUrl);
-      if (result.success && result.image) {
-        const newImg = result.image;
-        newImg.isMain = images.length === 0;
-        newImg.order = images.length + 1;
-
-        onChange([...images, newImg]);
-        setSuccessMessage('Görsel bağlantısı başarıyla eklendi!');
-        setImageUrlInput('');
-      }
-    } catch (err: any) {
-      // Fallback: Add directly client-side if API fails
       let cleanUrl = targetUrl;
       const imgurMatch = cleanUrl.match(/imgur\.com\/(?:a|gallery)?\/([a-zA-Z0-9]+)/i);
       if (imgurMatch && imgurMatch[1] && !cleanUrl.includes('i.imgur.com')) {
         cleanUrl = `https://i.imgur.com/${imgurMatch[1]}.jpg`;
       }
 
-      const filename = cleanUrl.split('/').pop()?.split('?')[0] || 'urun_gorseli.jpg';
+      const filename = cleanUrl.split('/').pop()?.split('?')[0] || 'urun_gorseli.webp';
       const fallbackImg: ProductImage = {
         id: `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         originalUrl: cleanUrl,
         optimizedUrl: cleanUrl,
         thumbnailUrl: cleanUrl,
-        fileName: filename.length < 30 ? filename : 'urun_gorseli.jpg',
-        fileType: 'image/jpeg',
+        fileName: filename.length < 30 ? filename : 'urun_gorseli.webp',
+        fileType: 'image/webp',
         fileSize: 100000,
         uploadDate: new Date().toISOString(),
         order: images.length + 1,
         isMain: images.length === 0
       };
       onChange([...images, fallbackImg]);
-      setSuccessMessage('Görsel bağlantısı doğrudan eklendi!');
+      setSuccessMessage('Kalıcı internet görsel adresi başarıyla eklendi!');
       setImageUrlInput('');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Görsel ekleme hatası');
     } finally {
       setIsUploading(false);
     }
   };
+
 
   // Set Main Image
   const setMainImage = (id: string) => {
@@ -217,7 +221,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onChange }
           <label className="relative border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 transition-all group">
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.avif"
               onChange={handleFileChange}
               disabled={isUploading}
               className="sr-only"
