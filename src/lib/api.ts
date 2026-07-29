@@ -85,15 +85,26 @@ export class ApiClient {
   static async getProducts(): Promise<Product[]> {
     try {
       const data = await this.request<Product[]>('/api/products');
-      localStorage.setItem('b2b_products_cache', JSON.stringify(data));
-      return data;
-    } catch (e) {
-      const cached = localStorage.getItem('b2b_products_cache');
-      if (cached) {
-        try { return JSON.parse(cached); } catch (err) {}
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem('b2b_products_cache', JSON.stringify(data));
+        return data;
       }
-      return FALLBACK_PRODUCTS;
+    } catch (e) {
+      // Static mode or API error
     }
+
+    const cached = localStorage.getItem('b2b_products_cache');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length >= FALLBACK_PRODUCTS.length) {
+          return parsed;
+        }
+      } catch (err) {}
+    }
+
+    localStorage.setItem('b2b_products_cache', JSON.stringify(FALLBACK_PRODUCTS));
+    return FALLBACK_PRODUCTS;
   }
 
   static async saveProduct(product: Product, userName?: string): Promise<Product> {
@@ -235,15 +246,26 @@ export class ApiClient {
   static async getDealers(): Promise<Dealer[]> {
     try {
       const data = await this.request<Dealer[]>('/api/dealers');
-      localStorage.setItem('b2b_dealers_cache', JSON.stringify(data));
-      return data;
-    } catch (e) {
-      const cached = localStorage.getItem('b2b_dealers_cache');
-      if (cached) {
-        try { return JSON.parse(cached); } catch (err) {}
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem('b2b_dealers_cache', JSON.stringify(data));
+        return data;
       }
-      return FALLBACK_DEALERS;
+    } catch (e) {
+      // Static mode or API error
     }
+
+    const cached = localStorage.getItem('b2b_dealers_cache');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (err) {}
+    }
+
+    localStorage.setItem('b2b_dealers_cache', JSON.stringify(FALLBACK_DEALERS));
+    return FALLBACK_DEALERS;
   }
 
   static async saveDealer(dealer: Dealer, userName?: string): Promise<Dealer> {

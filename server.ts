@@ -15,14 +15,15 @@ const PORT = 3000;
 app.use(express.json({ limit: '20mb' }));
 app.use(cors());
 
-// Ensure Uploads Directory Exists
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+// Ensure Uploads Directory Exists (in public/uploads for static builds like Vercel)
+const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(UPLOADS_DIR));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Configure Multer for File Uploads
 const storage = multer.diskStorage({
