@@ -97,7 +97,7 @@ export class ApiClient {
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length >= FALLBACK_PRODUCTS.length) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed;
         }
       } catch (err) {}
